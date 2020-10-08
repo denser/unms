@@ -29,9 +29,12 @@ class Unms
     private $last_error_message   = null;
     private $curl_ssl_verify_peer = false;
     private $curl_ssl_verify_host = false; //TODO use it in the init curl
-
-
-    /**
+	private $last_results_raw;
+	private $user;
+	private $password;
+	
+	
+	/**
      * Constructor of the API
      * @param string  $user       The username used to connect to the UNMS Api
      * @param string  $password   The account password
@@ -67,13 +70,14 @@ class Unms
          */
         if ($this->is_loggedin) $this->logout();
     }
-
-    /**
-     * Set debug mode
-     * --------------
-     * sets debug mode to true or false, returns false if a non-boolean parameter was passed
-     * @param boolean $enable true will enable debug mode, false will disable it
-     */
+	
+	/**
+	 * Set debug mode
+	 * --------------
+	 * sets debug mode to true or false, returns false if a non-boolean parameter was passed
+	 * @param boolean $enable true will enable debug mode, false will disable it
+	 * @return bool
+	 */
     public function set_debug($enable)
     {
         if ($enable === true || $enable === false) {
@@ -99,7 +103,7 @@ class Unms
      *                     integer height           The site height above ground, as displayed in the UNMS panel
      *                     integer elevation        The site elevation, as displayed in the UNMS panel. Will be calculatd automatically if nothing is present
      *
-     * @return object       The return value from the API
+     * @return object|bool       The return value from the API
      */
     public function create_site($site)
     {
@@ -132,7 +136,6 @@ class Unms
             'note' => $site['note'],
             'height' => $site['height'],
             'elevation' => $site['elevation'],
-            'location' => $site['location'],
         ]);
 
         $response = $this->exec_curl('/v2.1/sites', $json);
@@ -144,7 +147,7 @@ class Unms
      * @param  string $siteId The site ID to edit
      * @param  string $name   THe new name to be setted
      *
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function editSiteName($siteId, $name)
     {
@@ -161,7 +164,7 @@ class Unms
     /**
      * Return the site's object
      * @param  string $siteId The site id to get
-     * @return object               The entire site's object
+     * @return object|bool               The entire site's object
      */
     public function getSites($siteId)
     {
@@ -175,7 +178,7 @@ class Unms
      * @param string $siteId the site id to set
      * @param object $data   the valid data of the site to set
      *
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     protected function setSite($siteId, $data)
     {
@@ -192,7 +195,7 @@ class Unms
      * Move a device from one site to the other
      * @param  string $deviceId The device to move
      * @param  string $siteId   The site id in which to move the device
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function authorizeDevice($deviceId, $siteId)
     {
@@ -206,7 +209,7 @@ class Unms
     /**
      * Get the Wireless configuration from an aircube
      * @param  string $aircubeId The aircube ID to get the data from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getAircubeWirelessConfig($aircubeId)
     {
@@ -218,7 +221,7 @@ class Unms
     /**
      * Get the Network configuration from an aircube
      * @param  string $aircubeId The aircube ID to get the data from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getAircubeNetworkConfig($aircubeId)
     {
@@ -230,7 +233,7 @@ class Unms
     /**
      * Get the System configuration from an aircube
      * @param  string $aircubeId The aircube ID to get the data from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getAircubeSystemConfig($aircubeId)
     {
@@ -243,7 +246,7 @@ class Unms
      * Set the aircube led On or Off
      * @param string $aircubeId The aircube ID to set the led
      * @param boolean $is_on     Wether to turn On or Off the aircube led
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool      The return value from the API or FALSE if an error occured
      */
     public function setCubeLedOn($aircubeId, $is_on)
     {
@@ -265,7 +268,7 @@ class Unms
      * Set the aircube name
      * @param string $aircubeId The aircube ID to set the name
      * @param string $name     The new name to be setted to the cube
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function setCubeName($aircubeId, $name)
     {
@@ -285,7 +288,7 @@ class Unms
      * Set the aircube reset swith available or not
      * @param string $aircubeId The aircube ID to set the name
      * @param string $is_enabled Wether or not the reset switch is available
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function setCubeResetEnabled($aircubeId, $is_enabled)
     {
@@ -304,7 +307,7 @@ class Unms
      * Set the aircube POE On or Off
      * @param string $aircubeId The aircube ID to set the name
      * @param string $is_enabled Wether or not the POE is turned On
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function setCubePoeEnabled($aircubeId, $is_enabled)
     {
@@ -335,7 +338,7 @@ class Unms
      *                         username             The Administrator username
      *                         newPassword          The administrator password
      *
-     * @return object       The return value from the API
+     * @return object|bool       The return value from the API
      */
     public function setAircubeSystemConfig($aircubeId, $config)
     {
@@ -373,7 +376,7 @@ class Unms
      * @param string $aircubeId the aircube ID to set the config
      * @param array $config    the configuration array (see UNMS doc for details. Upcoming here in future version)
      *
-     * @return object       The return value from the API
+     * @return object|bool       The return value from the API
      */
     public function setAircubeNetworkConfig($aircubeId, $config)
     {
@@ -435,7 +438,7 @@ class Unms
      * @param string $aircubeId the aircube ID to set the config
      * @param array $config    the configuration array (see UNMS doc for details. Upcoming here in future version)
      *
-     * @return object       The return value from the API
+     * @return object|bool       The return value from the API
      */
     public function setAircubeWirelessConfig($aircubeId, $config)
     {
@@ -489,7 +492,7 @@ class Unms
     /**
      * Get the devices at the root of a site. This will not return child sites devices
      * @param  string $siteId the site Id to get the devices from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getDevices($siteId)
     {
@@ -501,7 +504,7 @@ class Unms
     /**
      * Get the interfaces from the router specified
      * @param  string $deviceId The router's device ID
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getRouterInterfaces($deviceId)
     {
@@ -513,7 +516,7 @@ class Unms
     /**
      * Get the specified aircube's data
      * @param  string $aircubeId the aircube Id to get the data from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getAirCubeData($aircubeId)
     {
@@ -525,7 +528,7 @@ class Unms
     /**
      * Get the clients connected to the specified aircube
      * @param  string $aircubeId the aircube Id to get the clients from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getAirCubeDevices($aircubeId)
     {
@@ -537,7 +540,7 @@ class Unms
     /**
      * Get the DHCP Lease from the specified router
      * @param  string $id the router device Id to get the DHCP Lease from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function geteRouterDHCPLeases($id)
     {
@@ -549,7 +552,7 @@ class Unms
     /**
      * Get the Wireless network informations from an aircube
      * @param  string $aircubeId the aircube device Id to get the wireless info from
-     * @return object       The return value from the API or FALSE if an error occured
+     * @return object|bool       The return value from the API or FALSE if an error occured
      */
     public function getAircubeWirelessInfo($aircubeId)
     {
@@ -557,21 +560,12 @@ class Unms
         $response    = $this->exec_curl('/v2.1/devices/aircubes/'.$aircubeId.'/config/wireless');
         return $this->process_response($response);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Process regular responses where output is the content of the data array
-     */
+	
+	/**
+	 * Process regular responses where output is the content of the data array
+	 * @param $response_json
+	 * @return bool|mixed
+	 */
     protected function process_response($response_json)
     {
         $response = json_decode($response_json);
@@ -743,10 +737,10 @@ class Unms
 
             if($content === false)
             {
-                    output('Curl error: ' . curl_error($curl_login));
+                    $this->output('Curl error: ' . curl_error($curl_login));
             }
 
-            $header = \Ubnt::get_headers_from_curl_response($content);
+            $header = $this->get_headers_from_curl_response($content);
 
             $header_size = curl_getinfo($curl_login, CURLINFO_HEADER_SIZE);
             $body        = trim(substr($content, $header_size));
@@ -754,7 +748,7 @@ class Unms
 
             curl_close ($curl_login);
 
-            $token= false;
+            $token = false;
 
             if($header && isset($header['x-auth-token']))
             {
@@ -766,10 +760,13 @@ class Unms
         $this->is_loggedin = true;
         return true;
     }
-
-    /**
-     * Execute the cURL request
-     */
+	
+	/**
+	 * Execute the cURL request
+	 * @param $path
+	 * @param string $data
+	 * @return bool|string
+	 */
     protected function exec_curl($path, $data = '')
     {
         $url = 'https://'.$this->baseurl.$path;
@@ -884,4 +881,34 @@ class Unms
 
         return $ch;
     }
+	
+	/**
+	 * Parse curl header object
+	 * @param $headerContent
+	 * @return array
+	 */
+	private function get_headers_from_curl_response($headerContent)
+	{
+		$headers = array();
+		foreach (explode(PHP_EOL, $headerContent) as $i => $line) {
+			if ($i === 0) {
+				$headers['http_code'] = $line;
+			} else {
+				if (strpos($line, ': ') !== false) {
+					list($key, $value) = explode(': ', $line);
+					$headers[$key] = $value;
+				}
+			}
+		}
+		return $headers;
+	}
+	
+	/**
+	 * @param $text
+	 */
+	private function output($text){
+		echo "<pre>";
+		var_dump($text);
+		die;
+	}
 }
