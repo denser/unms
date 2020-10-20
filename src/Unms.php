@@ -486,18 +486,20 @@ class Unms
         return $this->process_response($response);
 
     }
-
-
-
-    /**
-     * Get the devices at the root of a site. This will not return child sites devices
-     * @param  string $siteId the site Id to get the devices from
-     * @return object|bool       The return value from the API or FALSE if an error occured
-     */
-    public function getDevices($siteId)
+	
+	/**
+	 * Get the devices at the root of a site. This will not return child sites devices
+	 * @param string $siteId the site Id to get the devices from
+	 * @param string $type airfibers|airmaxes
+	 * @param string $id UUID of device
+	 * @return object|bool       The return value from the API or FALSE if an error occurred
+	 */
+    public function getDevices($siteId, $type = '', $id = '')
     {
         if (!$this->is_loggedin) return false;
-        $response    = $this->exec_curl('/v2.1/devices?siteId='.$siteId);
+        $suffix = "?siteId=$siteId";
+        if($type) $suffix = "/$type/$id?withStations=true";
+        $response    = $this->exec_curl("/v2.1/devices{$suffix}");
         return $this->process_response($response);
     }
 
@@ -587,7 +589,6 @@ class Unms
         return true;
 
     }
-
 
     /**
      * Capture the latest JSON error when $this->debug is true
@@ -742,9 +743,9 @@ class Unms
 
             $header = $this->get_headers_from_curl_response($content);
 
-            $header_size = curl_getinfo($curl_login, CURLINFO_HEADER_SIZE);
-            $body        = trim(substr($content, $header_size));
-            $code        = curl_getinfo($curl_login, CURLINFO_HTTP_CODE);
+            //$header_size = curl_getinfo($curl_login, CURLINFO_HEADER_SIZE);
+            //$body        = trim(substr($content, $header_size));
+            //$code        = curl_getinfo($curl_login, CURLINFO_HTTP_CODE);
 
             curl_close ($curl_login);
 
