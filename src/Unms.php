@@ -28,7 +28,7 @@ class Unms
     private $request_type         = 'POST';
     private $last_error_message   = null;
     private $curl_ssl_verify_peer = false;
-    private $curl_ssl_verify_host = false; //TODO use it in the init curl
+    private $curl_ssl_verify_host = 0;
 	private $last_results_raw;
 	private $user;
 	private $password;
@@ -490,17 +490,38 @@ class Unms
 	/**
 	 * Get the devices at the root of a site. This will not return child sites devices
 	 * @param string $siteId the site Id to get the devices from
-	 * @param string $type airfibers|airmaxes
-	 * @param string $id UUID of device
 	 * @return object|bool       The return value from the API or FALSE if an error occurred
 	 */
-    public function getDevices($siteId, $type = '', $id = '')
+    public function getDevices($siteId)
     {
         if (!$this->is_loggedin) return false;
-        $suffix = "?siteId=$siteId";
-        if($type) $suffix = "/$type/$id?withStations=true";
-        $response    = $this->exec_curl("/v2.1/devices{$suffix}");
+        $response = $this->exec_curl("/v2.1/devices?siteId=$siteId");
         return $this->process_response($response);
+    }
+	
+	/**
+	 * @param string $type airmaxes|airfibers etc
+	 * @param string $id
+	 * @return bool|mixed
+	 */
+	public function getDevice($type, $id)
+	{
+		if (!$this->is_loggedin) return false;
+		$suffix = "/$type/$id?withStations=true";
+		$response = $this->exec_curl("/v2.1/devices{$suffix}");
+		return $this->process_response($response);
+	}
+    
+    public function getDeviceWirelessConfig($type, $devId){
+	    if (!$this->is_loggedin) return false;
+		$response = $this->exec_curl("/v2.1/devices/{$type}/{$devId}/config/wireless");
+	    return $this->process_response($response);
+    }
+    
+    public function getAnyResult($str){
+	    if (!$this->is_loggedin) return false;
+		$response = $this->exec_curl("/v2.1/$str");
+	    return $this->process_response($response);
     }
 
     /**
@@ -875,7 +896,7 @@ class Unms
         }
 
         if($this->curl_ssl_verify_host) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->curl_ssl_verify_host);
         }
 
         if ($this->debug) curl_setopt($ch, CURLOPT_VERBOSE, true);
